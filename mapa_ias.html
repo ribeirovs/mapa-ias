@@ -8,11 +8,11 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #060608;
-    --surface: #0e0e14;
-    --surface2: #16161f;
-    --border: #1e1e2e;
-    --border2: #2a2a3e;
+    --bg: #060f10;
+    --surface: #0c1a1c;
+    --surface2: #122022;
+    --border: #1a2e30;
+    --border2: #243e40;
     --accent: #6f5ce6;
     --accent2: #e65c9c;
     --accent3: #5ce6a0;
@@ -481,7 +481,7 @@
       <div class="legend-item"><span class="stars-3">★★★</span> Melhor da categoria</div>
       <div class="legend-item"><span class="stars-2">★★</span> Muito bom</div>
       <div class="legend-item"><span class="stars-1">★</span> Funcional</div>
-      <div class="legend-item"><span class="stars-0">—</span> Fora do foco</div>
+      <div class="legend-item"><span class="stars-0">—</span> Não testei para esta função</div>
     </div>
   </header>
 
@@ -578,6 +578,7 @@ const tools = [
   { name: 'Suno AI', cat: 'Música IA', texto:'—', dados:'—', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'★★★', automacao:'—', acesso:'Free/Pro' },
   { name: 'Opal', cat: 'Vídeo/Síntese', texto:'—', dados:'—', imagem:'—', video:'★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'★★', automacao:'—', acesso:'Pago' },
   { name: 'Make (Integromat)', cat: 'Automação', texto:'—', dados:'—', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'★★★', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'★★★', acesso:'Free/Pago' },
+  { name: 'N8N', cat: 'Automação', texto:'—', dados:'—', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'★★★', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'★★★', acesso:'Free/Pago' },
 ];
 
 const ranking = [
@@ -609,7 +610,6 @@ const ranking = [
   { emoji:'🧑‍💼', title:'Avatar & Vídeo com IA', items:[
     { name:'HeyGen', desc:'Avatar realista com sincronização labial, fácil de usar' },
     { name:'Opal', desc:'Síntese de voz com avatar, bom para conteúdo corporativo' },
-    { name:'D-ID', desc:'Mais acessível no plano gratuito, resultado funcional' },
   ]},
   { emoji:'📊', title:'Dados & Planilhas', items:[
     { name:'Julius AI', desc:'Especialista em análise de dados com upload direto' },
@@ -626,15 +626,19 @@ const ranking = [
     { name:'Claude', desc:'Síntese com interpretação e contexto crítico' },
     { name:'Perplexity', desc:'Bom para resumos rápidos com citação de fonte' },
   ]},
-  { emoji:'🤖', title:'Agente Autônomo', items:[
+  { emoji:'🤖', title:'Agente de Raciocínio', items:[
     { name:'Manus AI', desc:'Executa tarefas complexas multietapa de forma independente' },
     { name:'Claude (Computer Use)', desc:'Controla o computador via API, robusto para devs' },
     { name:'Cursor Agent', desc:'Agente autônomo dentro de projetos de código' },
   ]},
+  { emoji:'⚙️', title:'Automação de Fluxo', items:[
+    { name:'Make', desc:'Visual, intuitivo e com grande biblioteca de integrações' },
+    { name:'N8N', desc:'Open source, mais flexível e customizável para devs' },
+  ]},
   { emoji:'🎵', title:'Áudio & Voz', items:[
     { name:'ElevenLabs', desc:'Clonagem de voz mais realista do mercado, dubbing em vídeo' },
     { name:'Suno AI', desc:'Música completa com letra e vocal gerados' },
-    { name:'Opal', desc:'Síntese de voz com avatar de vídeo' },
+    { name:'NotebookLM', desc:'Podcast gerado a partir dos seus documentos' },
   ]},
 ];
 
