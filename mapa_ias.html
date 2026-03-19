@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de IAs por Função</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060608;
+    --surface: #0e0e14;
+    --surface2: #16161f;
+    --border: #1e1e2e;
+    --border2: #2a2a3e;
+    --accent: #6f5ce6;
+    --accent2: #e65c9c;
+    --accent3: #5ce6a0;
+    --accent4: #e6c05c;
+    --text: #eeeef5;
+    --text2: #7878a0;
+    --text3: #4a4a6a;
+    --gold: #ffd166;
+    --s1: #5ce6a0;
+    --s2: #6f5ce6;
+    --s3: #e65c9c;
+    --dash: #2a2a3e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cabinet Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* GLOW BG */
+  .bg-glow {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(111,92,230,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, rgba(230,92,156,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .header-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-tag::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-sub {
+    font-size: 15px;
+    color: var(--text2);
+    max-width: 560px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .star-s1 { color: var(--s1); }
+  .star-s2 { color: var(--s2); }
+  .star-s3 { color: var(--s3); }
+  .star-dash { color: var(--dash); }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab.active {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border2);
+  }
+
+  /* FILTERS */
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .filter-btn {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(111,92,230,0.1); }
+
+  /* MATRIX TABLE */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+
+  thead th {
+    padding: 14px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    background: var(--surface);
+  }
+
+  thead th:first-child,
+  thead th:nth-child(2) {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    z-index: 2;
+  }
+
+  thead th:nth-child(2) { left: 180px; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 13px 12px;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  tbody td:first-child {
+    text-align: left;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+    padding-left: 20px;
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 1;
+  }
+
+  tbody tr:hover td:first-child { background: var(--surface2); }
+
+  tbody td:nth-child(2) {
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text2);
+    white-space: nowrap;
+    position: sticky;
+    left: 180px;
+    background: inherit;
+    z-index: 1;
+    padding-right: 20px;
+  }
+
+  tbody tr:hover td:nth-child(2) { background: var(--surface2); }
+
+  .access-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .access-free { background: rgba(92,230,160,0.1); color: var(--s1); border: 1px solid rgba(92,230,160,0.2); }
+  .access-pro { background: rgba(111,92,230,0.1); color: var(--s2); border: 1px solid rgba(111,92,230,0.2); }
+  .access-pago { background: rgba(230,92,156,0.1); color: var(--s3); border: 1px solid rgba(230,92,156,0.2); }
+  .access-limited { background: rgba(230,192,92,0.1); color: var(--accent4); border: 1px solid rgba(230,192,92,0.2); }
+
+  .stars-3 { color: var(--s1); font-size: 14px; }
+  .stars-2 { color: var(--s2); font-size: 14px; }
+  .stars-1 { color: var(--s3); font-size: 14px; }
+  .stars-0 { color: var(--border2); font-size: 14px; }
+
+  /* RANKING TAB */
+  .ranking-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .use-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .use-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+  }
+
+  .use-card-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .use-card-emoji { font-size: 20px; }
+
+  .use-card-title {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+
+  .use-card-body { padding: 12px 20px 16px; }
+
+  .rank-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rank-item:last-child { border-bottom: none; }
+
+  .rank-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    width: 20px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .rank-num.gold { color: var(--gold); }
+  .rank-num.silver { color: #a0a0b8; }
+  .rank-num.bronze { color: #b87c4a; }
+
+  .rank-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .rank-desc {
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+
+  /* SEARCH */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 24px;
+    max-width: 360px;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 11px 16px 11px 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder { color: var(--text3); }
+  .search-input:focus { border-color: var(--accent); }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 14px;
+  }
+
+  /* FOOTER */
+  footer {
+    margin-top: 80px;
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+  }
+
+  .footer-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .footer-brand span { color: var(--accent); }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: right;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* HIDDEN */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* FADE IN */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab-content.active { animation: fadeUp 0.3s ease; }
+
+  tr.hidden-row { display: none; }
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<div class="container">
+
+  <header>
+    <div class="header-tag">Pensamento Aumentado</div>
+    <h1>Mapa de IAs<br><span>por Função</span></h1>
+    <p class="header-sub">Referência prática para facilitar a escolha de ferramentas certas para cada tarefa.</p>
+    <div class="legend">
+      <div class="legend-item"><span class="stars-3">★★★</span> Melhor da categoria</div>
+      <div class="legend-item"><span class="stars-2">★★</span> Muito bom</div>
+      <div class="legend-item"><span class="stars-1">★</span> Funcional</div>
+      <div class="legend-item"><span class="stars-0">—</span> Fora do foco</div>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('matriz')">Matriz completa</button>
+    <button class="tab" onclick="switchTab('ranking')">Por caso de uso</button>
+  </div>
+
+  <!-- TAB: MATRIZ -->
+  <div class="tab-content active" id="tab-matriz">
+
+    <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:24px;">
+      <div class="search-wrap" style="margin-bottom:0">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" type="text" placeholder="Buscar ferramenta..." oninput="filterTable(this.value)">
+      </div>
+      <div class="filters" style="margin-bottom:0">
+        <button class="filter-btn active" onclick="filterCategory(this, 'all')">Todas</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Raciocínio')">Raciocínio</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Generalista')">Generalista</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Imagem')">Imagem</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Vídeo')">Vídeo</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Código')">Código</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Dados')">Dados</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Áudio')">Áudio</button>
+        <button class="filter-btn" onclick="filterCategory(this, 'Automação')">Automação</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="main-table">
+        <thead>
+          <tr>
+            <th>Ferramenta</th>
+            <th>Categoria</th>
+            <th>Texto</th>
+            <th>Dados</th>
+            <th>Imagem</th>
+            <th>Vídeo</th>
+            <th>Slides</th>
+            <th>Pesquisa</th>
+            <th>Planilha</th>
+            <th>Agente</th>
+            <th>Automação</th>
+            <th>Doc/PDF</th>
+            <th>Resumo</th>
+            <th>Memória</th>
+            <th>Áudio</th>
+            <th>Acesso</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: RANKING -->
+  <div class="tab-content" id="tab-ranking">
+    <div class="ranking-grid" id="ranking-grid"></div>
+  </div>
+
+  <footer>
+    <div class="footer-brand">por <span>Vivi Ribeiro</span> · Pensamento Aumentado</div>
+    <div class="footer-note">Avaliação baseada em uso real · Atualizado Mar 2026</div>
+  </footer>
+
+</div>
+
+<script>
+const tools = [
+  { name: 'Claude (Anthropic)', cat: 'Raciocínio & Texto', texto:'★★★', dados:'★★★', imagem:'★', video:'—', slides:'★★', pesquisa:'★★', planilha:'★★', agente:'★★', doc:'★★★', resumo:'★★★', memoria:'★★', audio:'★', automacao:'—', acesso:'Free/Pro' },
+  { name: 'ChatGPT (OpenAI)', cat: 'Generalista', texto:'★★', dados:'★★', imagem:'★★', video:'—', slides:'★★', pesquisa:'★★', planilha:'★★', agente:'★★', doc:'★★', resumo:'★★', memoria:'★★★', audio:'★★★', automacao:'★', acesso:'Free/Pro' },
+  { name: 'Gemini (Google)', cat: 'Generalista', texto:'★★', dados:'★★★', imagem:'★★', video:'★★★', slides:'★★', pesquisa:'★★★', planilha:'★★', agente:'★★', doc:'★★★', resumo:'★★', memoria:'★★', audio:'★★', automacao:'★', acesso:'Free/Pro' },
+  { name: 'Perplexity', cat: 'Pesquisa Web', texto:'★★', dados:'★★', imagem:'—', video:'—', slides:'—', pesquisa:'★★★', planilha:'—', agente:'—', doc:'★★', resumo:'★★', memoria:'★', audio:'—', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Grok (xAI)', cat: 'Generalista', texto:'★★', dados:'★', imagem:'★', video:'—', slides:'—', pesquisa:'★', planilha:'—', agente:'—', doc:'★', resumo:'★', memoria:'★', audio:'—', automacao:'—', acesso:'Free/Pro' },
+  { name: 'NotebookLM (Google)', cat: 'Análise de Docs', texto:'★★', dados:'★', imagem:'—', video:'★★★', slides:'★★★', pesquisa:'★', planilha:'—', agente:'—', doc:'★★★', resumo:'★★★', memoria:'★★', audio:'★★★', automacao:'—', acesso:'Free' },
+  { name: 'Midjourney', cat: 'Imagem', texto:'—', dados:'—', imagem:'★★★', video:'★★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Pago' },
+  { name: 'Ideogram', cat: 'Imagem c/ Texto', texto:'—', dados:'—', imagem:'★★★', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Sora (OpenAI)', cat: 'Vídeo', texto:'—', dados:'—', imagem:'—', video:'★★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Pro+' },
+  { name: 'Runway ML', cat: 'Vídeo', texto:'—', dados:'—', imagem:'★', video:'★★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Free/Pago' },
+  { name: 'Kling AI', cat: 'Vídeo', texto:'—', dados:'—', imagem:'—', video:'★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Google Flow', cat: 'Vídeo Cinematográfico', texto:'—', dados:'—', imagem:'★★', video:'★★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Limitado' },
+  { name: 'HeyGen', cat: 'Avatar & Vídeo IA', texto:'—', dados:'—', imagem:'—', video:'★★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'★★', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Gamma', cat: 'Apresentações', texto:'★★', dados:'—', imagem:'—', video:'—', slides:'★★★', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Beautiful.ai', cat: 'Apresentações', texto:'—', dados:'—', imagem:'—', video:'—', slides:'★★★', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Pago' },
+  { name: 'Julius AI', cat: 'Dados & Planilhas', texto:'★', dados:'★★★', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'★★★', agente:'—', doc:'★★', resumo:'—', memoria:'—', audio:'—', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Cursor', cat: 'Código', texto:'—', dados:'—', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'★★', doc:'—', resumo:'—', memoria:'★★★', audio:'—', automacao:'—', acesso:'Free/Pro' },
+  { name: 'GitHub Copilot', cat: 'Código', texto:'—', dados:'—', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'★★', audio:'—', automacao:'—', acesso:'Pago' },
+  { name: 'Manus AI', cat: 'Agente Autônomo', texto:'★★', dados:'★★', imagem:'—', video:'—', slides:'★', pesquisa:'★★', planilha:'★', agente:'★★★', doc:'★★', resumo:'—', memoria:'★★', audio:'—', automacao:'★★', acesso:'Free/Pro' },
+  { name: 'Browse AI', cat: 'Web Scraping', texto:'—', dados:'★', imagem:'—', video:'—', slides:'—', pesquisa:'★★★', planilha:'—', agente:'★★', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'★★', acesso:'Pago' },
+  { name: 'ElevenLabs', cat: 'Áudio & Voz', texto:'—', dados:'—', imagem:'★★', video:'★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'★★★', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Suno AI', cat: 'Música IA', texto:'—', dados:'—', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'★★★', automacao:'—', acesso:'Free/Pro' },
+  { name: 'Opal', cat: 'Vídeo/Síntese', texto:'—', dados:'—', imagem:'—', video:'★★', slides:'—', pesquisa:'—', planilha:'—', agente:'—', doc:'—', resumo:'—', memoria:'—', audio:'★★', automacao:'—', acesso:'Pago' },
+  { name: 'Make (Integromat)', cat: 'Automação', texto:'—', dados:'—', imagem:'—', video:'—', slides:'—', pesquisa:'—', planilha:'—', agente:'★★★', doc:'—', resumo:'—', memoria:'—', audio:'—', automacao:'★★★', acesso:'Free/Pago' },
+];
+
+const ranking = [
+  { emoji:'🖊️', title:'Escrever Textos', items:[
+    { name:'Claude', desc:'Melhor para textos longos, análise profunda e argumentação' },
+    { name:'ChatGPT', desc:'Versatilidade e rapidez para textos variados' },
+    { name:'Gemini', desc:'Bom com contexto longo e integração Google Docs' },
+  ]},
+  { emoji:'💻', title:'Programar / Dev', items:[
+    { name:'Cursor', desc:'IDE nativa com IA — contexto de projeto completo' },
+    { name:'Claude', desc:'Raciocínio de código superior, erra menos' },
+    { name:'GitHub Copilot', desc:'Integrado ao VS Code, sugestões inline rápidas' },
+  ]},
+  { emoji:'🔍', title:'Pesquisar / Buscar', items:[
+    { name:'Perplexity', desc:'Respostas com fontes em tempo real, diretas' },
+    { name:'Gemini', desc:'Integrado à busca Google, bom para contexto atual' },
+    { name:'ChatGPT', desc:'Search integrado no Pro, útil mas mais lento' },
+  ]},
+  { emoji:'🎨', title:'Gerar Imagens', items:[
+    { name:'Midjourney', desc:'Qualidade estética sem rival, realismo e arte' },
+    { name:'Ideogram', desc:'Melhor para imagens com texto incorporado' },
+    { name:'DALL-E 3', desc:'Integrado ao GPT, prático para uso casual' },
+  ]},
+  { emoji:'🎬', title:'Gerar Vídeos', items:[
+    { name:'Sora (OpenAI)', desc:'Coerência temporal e física impressionante' },
+    { name:'Google Flow', desc:'Vídeo cinematográfico com controle de câmera e cenas' },
+    { name:'Runway ML', desc:'Mais recursos de edição e referências de personagem' },
+  ]},
+  { emoji:'🧑‍💼', title:'Avatar & Vídeo com IA', items:[
+    { name:'HeyGen', desc:'Avatar realista com sincronização labial, fácil de usar' },
+    { name:'Opal', desc:'Síntese de voz com avatar, bom para conteúdo corporativo' },
+    { name:'D-ID', desc:'Mais acessível no plano gratuito, resultado funcional' },
+  ]},
+  { emoji:'📊', title:'Dados & Planilhas', items:[
+    { name:'Julius AI', desc:'Especialista em análise de dados com upload direto' },
+    { name:'Claude', desc:'Análise profunda de CSVs e lógica complexa' },
+    { name:'ChatGPT', desc:'Code Interpreter gera gráficos e pivot tables' },
+  ]},
+  { emoji:'🎤', title:'Slides & Apresentações', items:[
+    { name:'Gamma', desc:'Geração completa de decks em segundos, visual forte' },
+    { name:'Beautiful.ai', desc:'Templates premium, controle maior sobre design' },
+    { name:'ChatGPT + PPT', desc:'Estrutura o conteúdo, exporta com plugins' },
+  ]},
+  { emoji:'📄', title:'Resumo & Síntese de Docs', items:[
+    { name:'NotebookLM', desc:'Fidelidade cirúrgica à fonte, referencia trechos exatos' },
+    { name:'Claude', desc:'Síntese com interpretação e contexto crítico' },
+    { name:'Perplexity', desc:'Bom para resumos rápidos com citação de fonte' },
+  ]},
+  { emoji:'🤖', title:'Agente Autônomo', items:[
+    { name:'Manus AI', desc:'Executa tarefas complexas multietapa de forma independente' },
+    { name:'Claude (Computer Use)', desc:'Controla o computador via API, robusto para devs' },
+    { name:'Cursor Agent', desc:'Agente autônomo dentro de projetos de código' },
+  ]},
+  { emoji:'🎵', title:'Áudio & Voz', items:[
+    { name:'ElevenLabs', desc:'Clonagem de voz mais realista do mercado, dubbing em vídeo' },
+    { name:'Suno AI', desc:'Música completa com letra e vocal gerados' },
+    { name:'Opal', desc:'Síntese de voz com avatar de vídeo' },
+  ]},
+];
+
+function starClass(v) {
+  if (v === '★★★') return 'stars-3';
+  if (v === '★★') return 'stars-2';
+  if (v === '★') return 'stars-1';
+  return 'stars-0';
+}
+
+function accessClass(v) {
+  if (v === 'Free') return 'access-free';
+  if (v.includes('Free/')) return 'access-pro';
+  if (v === 'Pago' || v === 'Free/Pago') return 'access-pago';
+  return 'access-limited';
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  const fields = ['texto','dados','imagem','video','slides','pesquisa','planilha','agente','automacao','doc','resumo','memoria','audio'];
+  data.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.dataset.cat = t.cat;
+    tr.dataset.name = t.name.toLowerCase();
+    let cells = `<td>${t.name}</td><td>${t.cat}</td>`;
+    fields.forEach(f => {
+      cells += `<td class="${starClass(t[f])}">${t[f]}</td>`;
+    });
+    cells += `<td><span class="access-badge ${accessClass(t.acesso)}">${t.acesso}</span></td>`;
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderRanking() {
+  const grid = document.getElementById('ranking-grid');
+  const ranks = ['gold','silver','bronze'];
+  grid.innerHTML = '';
+  ranking.forEach(uc => {
+    const card = document.createElement('div');
+    card.className = 'use-card';
+    let items = uc.items.map((item, i) => `
+      <div class="rank-item">
+        <div class="rank-num ${ranks[i]}">${i+1}º</div>
+        <div>
+          <div class="rank-name">${item.name}</div>
+          <div class="rank-desc">${item.desc}</div>
+        </div>
+      </div>
+    `).join('');
+    card.innerHTML = `
+      <div class="use-card-header">
+        <span class="use-card-emoji">${uc.emoji}</span>
+        <span class="use-card-title">${uc.title}</span>
+      </div>
+      <div class="use-card-body">${items}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'matriz') || (i === 1 && tab === 'ranking'));
+  });
+  document.getElementById('tab-matriz').classList.toggle('active', tab === 'matriz');
+  document.getElementById('tab-ranking').classList.toggle('active', tab === 'ranking');
+}
+
+let currentCat = 'all';
+let currentSearch = '';
+
+function filterTable(search) {
+  currentSearch = search.toLowerCase();
+  applyFilters();
+}
+
+function filterCategory(btn, cat) {
+  currentCat = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const rows = document.querySelectorAll('#table-body tr');
+  rows.forEach(tr => {
+    const matchSearch = tr.dataset.name.includes(currentSearch);
+    let matchCat;
+    if (currentCat === 'all') {
+      matchCat = true;
+    } else if (currentCat === 'Automação') {
+      // filtra por quem tem estrelas na coluna automacao
+      const tool = tools.find(t => t.name.toLowerCase() === tr.dataset.name);
+      matchCat = tool && tool.automacao !== '—';
+    } else {
+      matchCat = tr.dataset.cat.toLowerCase().includes(currentCat.toLowerCase());
+    }
+    tr.style.display = (matchCat && matchSearch) ? '' : 'none';
+  });
+}
+
+renderTable(tools);
+renderRanking();
+</script>
+</body>
+</html>
